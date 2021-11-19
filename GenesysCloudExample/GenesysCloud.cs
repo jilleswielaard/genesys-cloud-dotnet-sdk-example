@@ -86,7 +86,10 @@ namespace GenesysCloudExample
         {
             Debug.WriteLine("Subscribe!!");
             NotificationHandler handler = new();
-            handler.AddSubscription($"v2.users.{me.Id}.presence", typeof(PresenceEventUserPresence));
+            List<Tuple<string, Type>> subscriptions = new();
+            subscriptions.Add(new Tuple<string, Type>($"v2.users.{me.Id}.presence", typeof(PresenceEventUserPresence)));
+            subscriptions.Add(new Tuple<string, Type>($"v2.users.{me.Id}.conversations.calls", typeof(ConversationCallEventTopicCallConversation)));
+            handler.AddSubscriptions(subscriptions);
             return handler;
         }
 
