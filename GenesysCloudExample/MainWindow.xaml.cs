@@ -36,6 +36,7 @@ namespace GenesysCloudExample
                 this.Activate();
                 output("get me");
                 _me = _genesysCloud.GetMe();
+                lblStatus.Content = _me.Presence.PresenceDefinition.SystemPresence.ToUpper();
                 output("subscribe");
                 Subscribe(_me);
                 btnCall.IsEnabled = true;

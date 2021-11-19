@@ -73,7 +73,9 @@ namespace GenesysCloudExample
         {
             
             Debug.WriteLine("Get Me!!");
-            return _usersApi.GetUsersMe();
+            List<string> expand = new List<string>();
+            expand.Add("presence");
+            return _usersApi.GetUsersMe(expand);
         }
 
         public static NotificationHandler Subscribe(UserMe me)
