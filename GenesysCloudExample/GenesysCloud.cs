@@ -6,7 +6,6 @@ using PureCloudPlatform.Client.V2.Extensions.Notifications;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,14 +14,18 @@ namespace GenesysCloudExample
 {
     class GenesysCloud
     {
-        // client configuration
-        const string _clientID = "8e2837eb-5a7b-4930-a648-5691e756be0a";
-        const string _clientSecret = "CAuDKbAvEA32R_yNFMwI2_iDRXuRV1k1BVsxYilh_zI";
-        const string _authorizationEndpoint = "https://login.mypurecloud.de/oauth/authorize";
-        ConversationsApi _conversationsApi = new();
-        UsersApi _usersApi = new();
+        // private
+        private const string _clientID = "8e2837eb-5a7b-4930-a648-5691e756be0a";
+        private const string _clientSecret = "CAuDKbAvEA32R_yNFMwI2_iDRXuRV1k1BVsxYilh_zI";
+        private const string _authorizationEndpoint = "https://login.mypurecloud.de/oauth/authorize";
+        private ConversationsApi _conversationsApi = new();
+        private UsersApi _usersApi = new();
 
-        public static async Task<AuthTokenInfo> Login()
+        // public
+        public UserMe me = null;
+        public AuthTokenInfo accessTokenInfo = null;
+
+        public async Task<AuthTokenInfo> Login()
         {
             Debug.WriteLine("Login!!");
             // Creates a redirect URI using an available port on the loopback address.
@@ -66,19 +69,20 @@ namespace GenesysCloudExample
             PureCloudRegionHosts region = PureCloudRegionHosts.eu_central_1;
             Configuration.Default.ApiClient.setBasePath(region);
 
-            return Configuration.Default.ApiClient.PostToken(_clientID, _clientSecret, redirectURI, code);
+            accessTokenInfo = Configuration.Default.ApiClient.PostToken(_clientID, _clientSecret, redirectURI, code);
+            return accessTokenInfo;
         }
 
         public UserMe GetMe()
         {
-            
             Debug.WriteLine("Get Me!!");
             List<string> expand = new List<string>();
             expand.Add("presence");
-            return _usersApi.GetUsersMe(expand);
+            me = _usersApi.GetUsersMe(expand);
+            return me;
         }
 
-        public static NotificationHandler Subscribe(UserMe me)
+        public NotificationHandler Subscribe()
         {
             Debug.WriteLine("Subscribe!!");
             NotificationHandler handler = new();

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Windows;
-using PureCloudPlatform.Client.V2.Extensions;
 using PureCloudPlatform.Client.V2.Model;
 using PureCloudPlatform.Client.V2.Extensions.Notifications;
 using System.Diagnostics;
@@ -12,8 +11,6 @@ namespace GenesysCloudExample
     /// </summary>
     public partial class MainWindow : Window
     {
-        AuthTokenInfo _accessTokenInfo = null;
-        UserMe _me = null;
         string _conversationId = null;
         GenesysCloud _genesysCloud = new GenesysCloud();
 
@@ -32,13 +29,13 @@ namespace GenesysCloudExample
             try
             {
                 output("login");
-                _accessTokenInfo = await GenesysCloud.Login();
+                await _genesysCloud.Login();
                 this.Activate();
                 output("get me");
-                _me = _genesysCloud.GetMe();
-                lblStatus.Content = _me.Presence.PresenceDefinition.SystemPresence.ToUpper();
+                _genesysCloud.GetMe();
+                lblStatus.Content = _genesysCloud.me.Presence.PresenceDefinition.SystemPresence.ToUpper();
                 output("subscribe");
-                Subscribe(_me);
+                Subscribe();
                 btnCall.IsEnabled = true;
             }
             catch (Exception ex)
@@ -49,7 +46,7 @@ namespace GenesysCloudExample
 
         private void Call_Click(object sender, RoutedEventArgs e)
         {
-            if (_accessTokenInfo != null && string.IsNullOrEmpty(_conversationId))
+            if (string.IsNullOrEmpty(_conversationId))
             {
                 try
                 {
@@ -83,9 +80,9 @@ namespace GenesysCloudExample
             }
         }
 
-        private void Subscribe(UserMe me)
+        private void Subscribe()
         {
-            NotificationHandler handler = GenesysCloud.Subscribe(me);
+            NotificationHandler handler = _genesysCloud.Subscribe();
             handler.NotificationReceived += (data) =>
             {
                 if (data.GetType() == typeof(NotificationData<PresenceEventUserPresence>))
