@@ -3,6 +3,7 @@ using System.Windows;
 using PureCloudPlatform.Client.V2.Model;
 using PureCloudPlatform.Client.V2.Extensions.Notifications;
 using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace GenesysCloudExample
 {
@@ -11,8 +12,9 @@ namespace GenesysCloudExample
     /// </summary>
     public partial class MainWindow : Window
     {
-        string _conversationId = null;
-        GenesysCloud _genesysCloud = new GenesysCloud();
+        private GenesysCloud _genesysCloud = new GenesysCloud();
+        private string _conversationId = null;
+        private Dictionary<string, ConversationCallEventTopicCallConversation> _conversations = new Dictionary<string, ConversationCallEventTopicCallConversation>();
 
         public MainWindow()
         {
@@ -98,10 +100,18 @@ namespace GenesysCloudExample
                 if (data.GetType() == typeof(NotificationData<ConversationCallEventTopicCallConversation>))
                 {
                     NotificationData<ConversationCallEventTopicCallConversation> conversation = (NotificationData<ConversationCallEventTopicCallConversation>) data;
-                    string id = conversation.EventBody.Id;
-                    Debug.WriteLine($"Conversation Updated: { id }");
+                    _conversations[conversation.EventBody.Id] = conversation.EventBody;
                 }
             };
+        }
+
+        private void Log_Click(object sender, RoutedEventArgs e)
+        {
+            var keys = _conversations.Keys;
+            foreach (var key in keys)
+            {
+                output(key);
+            }
         }
     }
 }
