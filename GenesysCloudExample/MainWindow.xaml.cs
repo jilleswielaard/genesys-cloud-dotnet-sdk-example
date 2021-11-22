@@ -4,6 +4,7 @@ using PureCloudPlatform.Client.V2.Model;
 using PureCloudPlatform.Client.V2.Extensions.Notifications;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace GenesysCloudExample
 {
@@ -19,7 +20,6 @@ namespace GenesysCloudExample
         {
             InitializeComponent();
             dgConversations.AutoGenerateColumns = false;
-            dgConversations.ItemsSource = _conversations;
         }
 
         private void output(string output)
@@ -102,9 +102,10 @@ namespace GenesysCloudExample
                 {
                     NotificationData<ConversationCallEventTopicCallConversation> conversation = (NotificationData<ConversationCallEventTopicCallConversation>)data;
                     _conversations[conversation.EventBody.Id] = conversation.EventBody;
+                    _conversations = _conversations.Where(conversation => conversation.Value.Participants.FindLast(x => x.User?.Id == _genesysCloud.me.Id).State != ConversationCallEventTopicCallMediaParticipant.StateEnum.Terminated).ToDictionary(p => p.Key, p => p.Value);
                     this.Dispatcher.Invoke(() =>
                     {
-                        dgConversations.Items.Refresh();
+                        dgConversations.ItemsSource = _conversations;
                     });
                 }
             };
