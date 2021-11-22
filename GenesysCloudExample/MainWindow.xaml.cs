@@ -15,10 +15,11 @@ namespace GenesysCloudExample
         private GenesysCloud _genesysCloud = new GenesysCloud();
         private string _conversationId = null;
         private Dictionary<string, ConversationCallEventTopicCallConversation> _conversations = new Dictionary<string, ConversationCallEventTopicCallConversation>();
-
         public MainWindow()
         {
             InitializeComponent();
+            dgConversations.AutoGenerateColumns = false;
+            dgConversations.ItemsSource = _conversations;
         }
 
         private void output(string output)
@@ -89,7 +90,7 @@ namespace GenesysCloudExample
             {
                 if (data.GetType() == typeof(NotificationData<PresenceEventUserPresence>))
                 {
-                    NotificationData<PresenceEventUserPresence> presence = (NotificationData<PresenceEventUserPresence>) data;
+                    NotificationData<PresenceEventUserPresence> presence = (NotificationData<PresenceEventUserPresence>)data;
                     string status = presence.EventBody.PresenceDefinition.SystemPresence;
                     Debug.WriteLine($"New presence: { status }");
                     this.Dispatcher.Invoke(() =>
@@ -99,8 +100,12 @@ namespace GenesysCloudExample
                 }
                 if (data.GetType() == typeof(NotificationData<ConversationCallEventTopicCallConversation>))
                 {
-                    NotificationData<ConversationCallEventTopicCallConversation> conversation = (NotificationData<ConversationCallEventTopicCallConversation>) data;
+                    NotificationData<ConversationCallEventTopicCallConversation> conversation = (NotificationData<ConversationCallEventTopicCallConversation>)data;
                     _conversations[conversation.EventBody.Id] = conversation.EventBody;
+                    this.Dispatcher.Invoke(() =>
+                    {
+                        dgConversations.Items.Refresh();
+                    });
                 }
             };
         }

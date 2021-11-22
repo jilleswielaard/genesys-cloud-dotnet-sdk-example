@@ -32,5 +32,10 @@
             <Label x:Name="lblStatus" FontSize="16" Grid.Column="5" VerticalAlignment="Center" HorizontalAlignment="Center">Status</Label>
         </Grid>
         <TextBox x:Name="textBoxOutput" TextWrapping="Wrap" Grid.Row="1" Grid.Column="1"/>
+        <DataGrid x:Name="dgConversations" Grid.Row="1">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="ID" Binding="{Binding Value.Id}"/>
+            </DataGrid.Columns>
+        </DataGrid>
     </Grid>
 </Window>
