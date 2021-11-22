@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace GenesysCloudExample
 {
@@ -22,10 +23,11 @@ namespace GenesysCloudExample
         private UsersApi _usersApi = new();
 
         // public
-        public UserMe me = null;
-        public AuthTokenInfo accessTokenInfo = null;
+        public UserMe me;
+        public AuthTokenInfo accessTokenInfo;
+        public Dictionary<string, ConversationCallEventTopicCallConversation> conversations = new();
 
-        public async Task<AuthTokenInfo> Login()
+        private async Task Login()
         {
             Debug.WriteLine("Login!!");
             // Creates a redirect URI using an available port on the loopback address.
@@ -70,19 +72,17 @@ namespace GenesysCloudExample
             Configuration.Default.ApiClient.setBasePath(region);
 
             accessTokenInfo = Configuration.Default.ApiClient.PostToken(_clientID, _clientSecret, redirectURI, code);
-            return accessTokenInfo;
         }
 
-        public UserMe GetMe()
+        private void GetMe()
         {
             Debug.WriteLine("Get Me!!");
             List<string> expand = new List<string>();
             expand.Add("presence");
             me = _usersApi.GetUsersMe(expand);
-            return me;
         }
 
-        public NotificationHandler Subscribe()
+        private void Subscribe()
         {
             Debug.WriteLine("Subscribe!!");
             NotificationHandler handler = new();
@@ -90,7 +90,29 @@ namespace GenesysCloudExample
             subscriptions.Add(new Tuple<string, Type>($"v2.users.{me.Id}.presence", typeof(PresenceEventUserPresence)));
             subscriptions.Add(new Tuple<string, Type>($"v2.users.{me.Id}.conversations.calls", typeof(ConversationCallEventTopicCallConversation)));
             handler.AddSubscriptions(subscriptions);
-            return handler;
+            handler.NotificationReceived += (data) =>
+            {
+                if (data.GetType() == typeof(NotificationData<PresenceEventUserPresence>))
+                {
+                    NotificationData<PresenceEventUserPresence> presence = (NotificationData<PresenceEventUserPresence>)data;
+                    string status = presence.EventBody.PresenceDefinition.SystemPresence;
+                    Debug.WriteLine($"New presence: { status }");
+                    me.Presence.PresenceDefinition.SystemPresence = status;
+                }
+                if (data.GetType() == typeof(NotificationData<ConversationCallEventTopicCallConversation>))
+                {
+                    NotificationData<ConversationCallEventTopicCallConversation> conversation = (NotificationData<ConversationCallEventTopicCallConversation>)data;
+                    conversations[conversation.EventBody.Id] = conversation.EventBody;
+                    conversations = conversations.Where(conversation => conversation.Value.Participants.FindLast(x => x.User?.Id == me.Id).State != ConversationCallEventTopicCallMediaParticipant.StateEnum.Terminated).ToDictionary(p => p.Key, p => p.Value);
+                }
+            };
+        }
+
+        public async Task Connect()
+        {
+            await Login();
+            GetMe();
+            Subscribe();
         }
 
         public string Call(string number)
@@ -103,10 +125,18 @@ namespace GenesysCloudExample
             return response.Id;
         }
 
-        public void Disconnect(string conversationId)
+        public void Disconnect()
         {
-            Debug.WriteLine("Disconnect: " + conversationId);
-            _conversationsApi.PostConversationDisconnect(conversationId);
+            Debug.WriteLine("Disconnect");
+            foreach (var conversation in conversations.Values)
+            {
+                var conversationId = conversation.Id;
+                var participantId = conversation.Participants.FindLast(c => c.User?.Id == me.Id).Id;
+                var body = new MediaParticipantRequest();
+                body.State = MediaParticipantRequest.StateEnum.Disconnected;
+                Debug.WriteLine("Disconnect conversation: " + conversationId + " participant: " + participantId);
+                _conversationsApi.PatchConversationsCallParticipant(conversationId, participantId, body);
+            }
         }
     }
 }
