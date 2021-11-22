@@ -6,11 +6,31 @@
         xmlns:local="clr-namespace:GenesysCloudExample"
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        <Button x:Name="btnLogin" Content="Login" HorizontalAlignment="Left" Margin="10,25,0,0" VerticalAlignment="Top" RenderTransformOrigin="-8.51,-8.292" Click="Login_Click" Height="36" Width="128" FontSize="16"/>
-        <TextBox x:Name="textBoxOutput" Margin="10,80,10,10" TextWrapping="Wrap"/>
-        <Button x:Name="btnCall" Content="Call" HorizontalAlignment="Left" Margin="143,25,0,0" VerticalAlignment="Top" Height="36" Width="125" FontSize="16" Click="Call_Click" IsEnabled="False"/>
-        <Button x:Name="btnDisconnect" Content="Disconnect" HorizontalAlignment="Left" Margin="273,25,0,0" VerticalAlignment="Top" Height="36" Width="125" FontSize="16" Click="Disconnect_Click" IsEnabled="False"/>
-        <Label x:Name="lblStatus" Content="Status" HorizontalAlignment="Left" Margin="689,30,0,0" VerticalAlignment="Top" RenderTransformOrigin="4.681,0.37"/>
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="50"/>
+            <RowDefinition Height="300"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions >
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="300"/>
+        </Grid.ColumnDefinitions>
+        <Grid Grid.ColumnSpan="2" >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Button x:Name="btnLogin" FontSize="16" Click="Login_Click">Login</Button>
+            <Button x:Name="btnCall" FontSize="16" Click="Call_Click" IsEnabled="False" Grid.Column="1">Call</Button>
+            <Button x:Name="btnDisconnect" FontSize="16" Click="Disconnect_Click" IsEnabled="False" Grid.Column="2">Disconnect</Button>
+            <Button x:Name="btnLog" FontSize="16" Click="Log_Click" Grid.Column="3">Log</Button>
+            <Label x:Name="lblStatus" FontSize="16" Grid.Column="5" VerticalAlignment="Center" HorizontalAlignment="Center">Status</Label>
+        </Grid>
+        <TextBox x:Name="textBoxOutput" TextWrapping="Wrap" Grid.Row="1" Grid.Column="1"/>
     </Grid>
 </Window>
