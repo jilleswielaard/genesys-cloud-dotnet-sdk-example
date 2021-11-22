@@ -9,9 +9,12 @@ namespace GenesysCloudExample
     public partial class MainWindow : Window
     {
         private GenesysCloud _genesysCloud = new GenesysCloud();
+
         public MainWindow()
         {
             InitializeComponent();
+            lblStatus.DataContext = _genesysCloud;
+            dgConversations.DataContext = _genesysCloud;
         }
 
         private void output(string output)
@@ -26,7 +29,6 @@ namespace GenesysCloudExample
                 output("login");
                 await _genesysCloud.Connect();
                 this.Activate();
-                lblStatus.Content = _genesysCloud.me.Presence.PresenceDefinition.SystemPresence.ToUpper();
                 btnCall.IsEnabled = true;
             }
             catch (Exception ex)
@@ -61,11 +63,6 @@ namespace GenesysCloudExample
             {
                 output(ex.Message);
             }
-        }
-
-        private void Log_Click(object sender, RoutedEventArgs e)
-        {
-
         }
     }
 }

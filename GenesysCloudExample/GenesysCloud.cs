@@ -10,10 +10,12 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Linq;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace GenesysCloudExample
 {
-    class GenesysCloud
+    public class GenesysCloud : INotifyPropertyChanged
     {
         // private
         private const string _clientID = "8e2837eb-5a7b-4930-a648-5691e756be0a";
@@ -21,11 +23,36 @@ namespace GenesysCloudExample
         private const string _authorizationEndpoint = "https://login.mypurecloud.de/oauth/authorize";
         private ConversationsApi _conversationsApi = new();
         private UsersApi _usersApi = new();
+        private string _status = "OFFLINE";
+        private AuthTokenInfo _accessTokenInfo;
+        private UserMe _me;
+        private Dictionary<string, ConversationCallEventTopicCallConversation> _conversations = new();
 
         // public
-        public UserMe me;
-        public AuthTokenInfo accessTokenInfo;
-        public Dictionary<string, ConversationCallEventTopicCallConversation> conversations = new();
+        public UserMe Me 
+        { 
+            get { return _me; }
+        }
+        
+        public string Status
+        {
+            get { return _status; }
+            set
+            {
+                _status = value;
+                OnPropertyChanged();
+            }
+        }
+        public Dictionary<string, ConversationCallEventTopicCallConversation> Conversations
+        {
+            get { return _conversations; }
+            set
+            {
+                _conversations = value;
+                OnPropertyChanged();
+            }
+        }
+        public event PropertyChangedEventHandler PropertyChanged;
 
         private async Task Login()
         {
@@ -71,7 +98,7 @@ namespace GenesysCloudExample
             PureCloudRegionHosts region = PureCloudRegionHosts.eu_central_1;
             Configuration.Default.ApiClient.setBasePath(region);
 
-            accessTokenInfo = Configuration.Default.ApiClient.PostToken(_clientID, _clientSecret, redirectURI, code);
+            _accessTokenInfo = Configuration.Default.ApiClient.PostToken(_clientID, _clientSecret, redirectURI, code);
         }
 
         private void GetMe()
@@ -79,7 +106,8 @@ namespace GenesysCloudExample
             Debug.WriteLine("Get Me!!");
             List<string> expand = new List<string>();
             expand.Add("presence");
-            me = _usersApi.GetUsersMe(expand);
+            _me = _usersApi.GetUsersMe(expand);
+            Status = _me.Presence.PresenceDefinition.SystemPresence.ToUpper();
         }
 
         private void Subscribe()
@@ -87,23 +115,23 @@ namespace GenesysCloudExample
             Debug.WriteLine("Subscribe!!");
             NotificationHandler handler = new();
             List<Tuple<string, Type>> subscriptions = new();
-            subscriptions.Add(new Tuple<string, Type>($"v2.users.{me.Id}.presence", typeof(PresenceEventUserPresence)));
-            subscriptions.Add(new Tuple<string, Type>($"v2.users.{me.Id}.conversations.calls", typeof(ConversationCallEventTopicCallConversation)));
+            subscriptions.Add(new Tuple<string, Type>($"v2.users.{_me.Id}.presence", typeof(PresenceEventUserPresence)));
+            subscriptions.Add(new Tuple<string, Type>($"v2.users.{_me.Id}.conversations.calls", typeof(ConversationCallEventTopicCallConversation)));
             handler.AddSubscriptions(subscriptions);
             handler.NotificationReceived += (data) =>
             {
                 if (data.GetType() == typeof(NotificationData<PresenceEventUserPresence>))
                 {
                     NotificationData<PresenceEventUserPresence> presence = (NotificationData<PresenceEventUserPresence>)data;
-                    string status = presence.EventBody.PresenceDefinition.SystemPresence;
+                    string status = presence.EventBody.PresenceDefinition.SystemPresence.ToUpper();
                     Debug.WriteLine($"New presence: { status }");
-                    me.Presence.PresenceDefinition.SystemPresence = status;
+                    Status = status;
                 }
                 if (data.GetType() == typeof(NotificationData<ConversationCallEventTopicCallConversation>))
                 {
                     NotificationData<ConversationCallEventTopicCallConversation> conversation = (NotificationData<ConversationCallEventTopicCallConversation>)data;
-                    conversations[conversation.EventBody.Id] = conversation.EventBody;
-                    conversations = conversations.Where(conversation => conversation.Value.Participants.FindLast(x => x.User?.Id == me.Id).State != ConversationCallEventTopicCallMediaParticipant.StateEnum.Terminated).ToDictionary(p => p.Key, p => p.Value);
+                    Conversations[conversation.EventBody.Id] = conversation.EventBody;
+                    Conversations = Conversations.Where(conversation => conversation.Value.Participants.FindLast(x => x.User?.Id == _me.Id).State != ConversationCallEventTopicCallMediaParticipant.StateEnum.Terminated).ToDictionary(p => p.Key, p => p.Value);
                 }
             };
         }
@@ -128,15 +156,20 @@ namespace GenesysCloudExample
         public void Disconnect()
         {
             Debug.WriteLine("Disconnect");
-            foreach (var conversation in conversations.Values)
+            foreach (var conversation in Conversations.Values)
             {
                 var conversationId = conversation.Id;
-                var participantId = conversation.Participants.FindLast(c => c.User?.Id == me.Id).Id;
+                var participantId = conversation.Participants.FindLast(c => c.User?.Id == _me.Id).Id;
                 var body = new MediaParticipantRequest();
                 body.State = MediaParticipantRequest.StateEnum.Disconnected;
                 Debug.WriteLine("Disconnect conversation: " + conversationId + " participant: " + participantId);
                 _conversationsApi.PatchConversationsCallParticipant(conversationId, participantId, body);
             }
+        }
+
+        protected void OnPropertyChanged([CallerMemberName] string name = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
     }
 }

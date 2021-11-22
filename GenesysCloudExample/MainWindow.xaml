@@ -28,11 +28,17 @@
             <Button x:Name="btnLogin" FontSize="16" Click="Login_Click">Login</Button>
             <Button x:Name="btnCall" FontSize="16" Click="Call_Click" IsEnabled="False" Grid.Column="1">Call</Button>
             <Button x:Name="btnDisconnect" FontSize="16" Click="Disconnect_Click" Grid.Column="2">Disconnect</Button>
-            <Button x:Name="btnLog" FontSize="16" Click="Log_Click" Grid.Column="3">Log</Button>
-            <Label x:Name="lblStatus" FontSize="16" Grid.Column="5" VerticalAlignment="Center" HorizontalAlignment="Center">Status</Label>
+            <Label x:Name="lblStatus" FontSize="16" Grid.Column="5" VerticalAlignment="Center" HorizontalAlignment="Center" Content="{ Binding Status }" >
+                <Label.DataContext>
+                    <local:GenesysCloud/>
+                </Label.DataContext>
+            </Label>
         </Grid>
         <TextBox x:Name="textBoxOutput" TextWrapping="Wrap" Grid.Row="1" Grid.Column="1"/>
-        <DataGrid x:Name="dgConversations" Grid.Row="1">
+        <DataGrid x:Name="dgConversations" Grid.Row="1" ItemsSource="{Binding Conversations}" AutoGenerateColumns="False">
+            <DataGrid.DataContext>
+                <local:GenesysCloud/>
+            </DataGrid.DataContext>
             <DataGrid.Columns>
                 <DataGridTextColumn Header="ID" Binding="{Binding Value.Id}"/>
             </DataGrid.Columns>
