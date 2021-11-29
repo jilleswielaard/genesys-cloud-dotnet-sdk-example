@@ -64,5 +64,10 @@ namespace GenesysCloudExample
                 output(ex.Message);
             }
         }
+
+        private void Pickup_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }
