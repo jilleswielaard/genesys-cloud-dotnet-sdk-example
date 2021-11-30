@@ -67,7 +67,15 @@ namespace GenesysCloudExample
 
         private void Pickup_Click(object sender, RoutedEventArgs e)
         {
-
+            try
+            {
+                output("Pickup");
+                _genesysCloud.Pickup();
+            }
+            catch (Exception ex)
+            {
+                output(ex.Message);
+            }
         }
     }
 }

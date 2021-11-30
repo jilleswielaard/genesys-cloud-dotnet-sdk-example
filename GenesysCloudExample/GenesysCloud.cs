@@ -52,6 +52,7 @@ namespace GenesysCloudExample
                 OnPropertyChanged();
             }
         }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         private async Task Login()
@@ -163,6 +164,21 @@ namespace GenesysCloudExample
                 var body = new MediaParticipantRequest();
                 body.State = MediaParticipantRequest.StateEnum.Disconnected;
                 Debug.WriteLine("Disconnect conversation: " + conversationId + " participant: " + participantId);
+                _conversationsApi.PatchConversationsCallParticipant(conversationId, participantId, body);
+            }
+        }
+
+        public void Pickup()
+        {
+            Debug.WriteLine("Pickup");
+            var alertingConversations = Conversations.Where(conversation => conversation.Value.Participants.FindLast(x => x.User?.Id == _me.Id).State == ConversationCallEventTopicCallMediaParticipant.StateEnum.Alerting).ToDictionary(p => p.Key, p => p.Value);
+            foreach (var conversation in alertingConversations.Values)
+            {
+                var conversationId = conversation.Id;
+                var participantId = conversation.Participants.FindLast(c => c.User?.Id == _me.Id).Id;
+                var body = new MediaParticipantRequest();
+                body.State = MediaParticipantRequest.StateEnum.Connected;
+                Debug.WriteLine("Pickup conversation: " + conversationId + " participant: " + participantId);
                 _conversationsApi.PatchConversationsCallParticipant(conversationId, participantId, body);
             }
         }
