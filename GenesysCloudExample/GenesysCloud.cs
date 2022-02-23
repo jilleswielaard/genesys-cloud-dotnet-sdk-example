@@ -23,6 +23,7 @@ namespace GenesysCloudExample
         private const string _authorizationEndpoint = "https://login.mypurecloud.de/oauth/authorize";
         private ConversationsApi _conversationsApi = new();
         private UsersApi _usersApi = new();
+        private PresenceApi _presenceApi = new();
         private string _status = "OFFLINE";
         private AuthTokenInfo _accessTokenInfo;
         private UserMe _me;
@@ -180,7 +181,22 @@ namespace GenesysCloudExample
                 body.State = MediaParticipantRequest.StateEnum.Connected;
                 Debug.WriteLine("Pickup conversation: " + conversationId + " participant: " + participantId);
                 _conversationsApi.PatchConversationsCallParticipant(conversationId, participantId, body);
+                var customer = conversation.Participants.Find(c => c.Purpose == "customer");
+                foreach(KeyValuePair<string, string> attribute in customer.Attributes)
+                {
+                    Debug.WriteLine(attribute.Key + ":" + attribute.Value);
+                }
             }
+        }
+
+        public void ChangeStatus(string id)
+        {
+            Debug.WriteLine("Change Status");
+            var presence = new UserPresence();
+            var def = new PresenceDefinition();
+            def.Id = id;
+            presence.PresenceDefinition = def;
+            _presenceApi.PatchUserPresencesPurecloud(_me.Id, presence);
         }
 
         protected void OnPropertyChanged([CallerMemberName] string name = null)

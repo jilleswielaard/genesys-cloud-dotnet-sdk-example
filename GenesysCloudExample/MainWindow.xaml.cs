@@ -77,5 +77,32 @@ namespace GenesysCloudExample
                 output(ex.Message);
             }
         }
+
+        private void OnQueue_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                output("OnQueue");
+                _genesysCloud.ChangeStatus("e08eaf1b-ee47-4fa9-a231-1200e284798f");
+            }
+            catch (Exception ex)
+            {
+                output(ex.Message);
+            }
+        }
+
+        private void Available_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                output("Available");
+                _genesysCloud.ChangeStatus("6a3af858-942f-489d-9700-5f9bcdcdae9b");
+            }
+            catch (Exception ex)
+            {
+                output(ex.Message);
+            }
+
+        }
     }
 }
