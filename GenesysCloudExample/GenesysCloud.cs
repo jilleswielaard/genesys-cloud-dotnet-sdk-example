@@ -189,6 +189,20 @@ namespace GenesysCloudExample
             }
         }
 
+        public void sendDtmf(string key)
+        {
+            Debug.WriteLine("Send DTMF");
+            foreach (var conversation in Conversations.Values)
+            {
+                var conversationId = conversation.Id;
+                var participantId = conversation.Participants.FindLast(c => c.User?.Id == _me.Id).Id;
+                var body = new Digits(key);
+                //body._Digits = key;
+                Debug.WriteLine("Send DTMF: " + conversationId + " participant: " + participantId);
+                _conversationsApi.PostConversationParticipantDigits(conversationId, participantId, body);
+            }
+        }
+
         public void ChangeStatus(string id)
         {
             Debug.WriteLine("Change Status");

@@ -104,5 +104,19 @@ namespace GenesysCloudExample
             }
 
         }
+
+        private void Dtmf_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                output("DTMF");
+                _genesysCloud.sendDtmf("2");
+            }
+            catch (Exception ex)
+            {
+                output(ex.Message);
+            }
+
+        }
     }
 }
